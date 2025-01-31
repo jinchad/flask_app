@@ -1,27 +1,17 @@
+# import packages
 from flask import Flask
 from config import Config
-# package for managing the database interactions with ORM
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy # package for managing the database interactions with ORM
+from flask_migrate import Migrate # package for handling database migrations
+from flask_login import LoginManager # package that manages uers authentication and sessions
 
-# package for handling database migrations
-from flask_migrate import Migrate
-
-# manages uers authentication and sessions
-from flask_login import LoginManager
-
-# Initializing the app as a Flask object
-appy = Flask(__name__)
+appy = Flask(__name__) # Initializing the app as a Flask object
 appy.config.from_object(Config)
 
-# Initializing the database
-db = SQLAlchemy(appy)
+db = SQLAlchemy(appy) # Initializing the database
 migrate = Migrate(appy, db)
 
-# Creating a login manager object
-login = LoginManager(appy)
+login = LoginManager(appy) # Creating a login manager object
+login.login_view = 'login' # setting the view for the login object
 
-# setting the view for the login object
-login.login_view = 'login'
-
-# import statement to prevent circular imports
-from app import routes, models
+from app import routes, models # import statement to prevent circular imports
