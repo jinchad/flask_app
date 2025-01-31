@@ -2,6 +2,7 @@ from typing import Optional
 import sqlalchemy as sa # package for general purpose database functions and classes such as types and query building helpers
 import sqlalchemy.orm as so # package that provides support for model
 from app import db, login
+from hashlib import md5
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -36,14 +37,21 @@ class User(db.Model, UserMixin):
         - posts (Post): Posts made under the account
     """
     id: so.Mapped[int] = so.mapped_column(primary_key=True) 
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True,
-                                                unique=True)
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), 
+                                                index=True,
+                                                unique=True # ensures that only a single instance of this username is allowed in the column
+                                                )
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True,
                                              unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
 
     posts: so.WriteOnlyMapped['Post'] = so.relationship(
         back_populates='author')
+    
+    about_me: so.Mapped[Optional[str]] = so.mapped_column(sa.String(140))
+
+    last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(
+        default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
         """
@@ -73,6 +81,11 @@ class User(db.Model, UserMixin):
             - boolean value indicating if the password given is identical to that of the user
         """
         return check_password_hash(self.password_hash, password)
+    
+    # generating the avatar using Gravatar service
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return f'https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}'
 
 
 class Post(db.Model):
